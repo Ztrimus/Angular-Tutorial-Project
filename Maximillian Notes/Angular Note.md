@@ -1,17 +1,18 @@
 # Angular-Tutorial-Project
 
-## Repeat following in practice
-1. canActivate
-2. canDeactivate
-3. Resolver
-
-
 # Sections
 1. Component
 2. Directives
 3. Services
 4. Routing
-5. NgModule MetaData
+5. Observables
+
+Repeat following in practice
+---------------------------
+1. canActivate
+2. canDeactivate
+3. Resolver
+
 
 # 1. COMPONENT
 
@@ -98,6 +99,7 @@ in parent.html
 2. Structural Directives
     a. ngIf
     b. ngFor
+    c. ngSwitch
 
 ## 2.1. Attribute Directive
 
@@ -388,6 +390,10 @@ this.route.fragment.subscribe( (fragment: Params) => {
     }
     );
 ```
+### NOTE
+Here, you uses built in observables you don't need to unsubscribe the it.
+**But you need to unsubscribe you own (created by you) observables**.
+
 ## 4.7 Nested Routing
 ```ts
 const appRoutes: Routes = [
@@ -582,28 +588,34 @@ export  class AppRoutingModule {
 
 # 5. OBSERVABLES
 - http://reactivex.io/documentation/observable.html
-- Observable is an object we import from a third-party package (rxjs).
+- Observables is an object we import from a third part package (rxjs).
 - It's kind of object of some data structure (Events, Http requests, triggered in code)
 - You can handle asynchronous tasks.
 - rxjs library provides observables.
 
-![observable-working](./observable-working.PNG)
+                    Observables
+
+        (---------- Timeline/stream ------------)
+
+                    Observer
+
 ### 5.1 How it works
-1. **Observable** : it follows observable patterns.
-2. **Timeline/stream** : can have multiple events emitted by observable/data packages
-3. **Observer** : Code you write after subscribe() function.
-- You can Handle observables/data packages in three ways/ in three subscribers:
+1. Observable : it follows observable patterns.
+2. Timeline/stream : can have multiple events emitted by observable/data packages
+3. Observer : Code you write after subscribe() function.
+    - You can Handle observables/data packages in three ways/ in three subscriber:
     1. Handle Data
     2. Handle error
     3. Handle COmpletion
-- Your code gets executed in these three hooks/boxes.
+    - Your code get executed in this three hooks/boxes.
 
 **Observable doesn't need to complete.**
+
 In Code
-E.g.
+E.g. 
 ```ts
 this.route.params.subscribe(
-// Handle Data subscriber
+    // Handle Data subscriber
     (parameter: Params) => {
         this.id = +parameter['id'];
     }
@@ -611,21 +623,25 @@ this.route.params.subscribe(
     () => {
     }
     // Handle completion of subscriber
-    () => {
+    () => {   
     }
 );
 ```
--  `this.route.params` : It's Observable of `this.routes`.
--  `this.route.params.subscribe()` : It's Observer.
+- `this.route.params` : It's Observable of `this.routes`.
+- `this.route.params.subscribe()` : It's Observer.
+
 ### 5.2 Create simple Observable
+
 Creat Observable which will generate ascending number in interval of 1 second.
 ```ts
-import { Observable } from  'rxjs/Observable';
-import  'rxjs/Rx'; // required for .interval();
-export  class HomeComponent implements OnInit {
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/Rx'; // required for .interval();
+
+export class HomeComponent implements OnInit {
     constructor() { }
+
     ngOnInit() {
-        // Define the Observable
+    // Define the Observable
         const myNumber = Observable.interval(1000);
         // Use Observable
         myNumber.subscribe(
@@ -633,112 +649,120 @@ export  class HomeComponent implements OnInit {
                 console.log(num);
             }
         );
-    }
+  }
 }
 ```
+
 ## 5.3 Create Observable from scratch
+
 ```ts
-import { Observable } from  'rxjs/Observable';
-import  'rxjs/Rx';
-import { Observer } from  'rxjs/Observer';
-export  class HomeComponent implements OnInit {
-    constructor() { }
-    ngOnInit() {
-        // Creating Observable
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/Rx';
+import { Observer } from 'rxjs/Observer';
 
-        // Observable.create() take function as argument and don't confused this with subscribe()
-        // it takes and return observer
-        const myObservable = Observable.create((observer: Observer<string>) => {
-            setTimeout(() => {
-                // This next emit normal data package which you recieve in subscribe()
-                observer.next('The First Package.');
-            }, 2000);
+export class HomeComponent implements OnInit {
+  constructor() { }
+  ngOnInit() {
+    // Creating Observable
 
-            setTimeout(() => {
-                observer.next('The Second Package');
-            }, 4000);
+    // Observable.create() take function as argument and don't confused this with subscribe()
+    // it takes and return observer
+    const myObservable = Observable.create((observer: Observer<string>) => {
+      setTimeout(() => {
+        // This next emit normal data package which you recieve in subscribe()
+        observer.next('The First Package.');
+      }, 2000);
 
-            setTimeout(() => {
-                // throw an error.
-                observer.error('This doesn\'t work.');
-            }, 5000);
+      setTimeout(() => {
+        observer.next('The Second Package');
+      }, 4000);
 
-            setTimeout(() => {
-                observer.next('The Third package.');
-            });
-        });
+      setTimeout(() => {
+        // throw an error.
+        observer.error('This doesn\'t work.');
+      }, 5000);
 
-        // Using Observable
-        myObservable.subscribe(
-            // data observer
-            (data: string) => { console.log(data); },
-            // error observer
-            (error: string) => { console.log(error); },
-            // handle completion observer
-            () => { console.log('This complete.'); }
-        );
-    }
+      setTimeout(() => {
+        observer.next('The Third package.');
+      });
+    });
+
+    // Using Observable
+    myObservable.subscribe(
+      // data observer
+      (data: string) => { console.log(data); },
+      // error observer
+      (error: string) => { console.log(error); },
+      // handle completion observer
+      () => { console.log('This complete.'); }
+    );
+  }
+
 }
+
 ```
+
 ### NOTE
 1. To execute complete observer jusr replace `observer.error()` with `observer.complete()`
 ```ts
 setTimeout(() => {
-    observer.complete();
-}, 5000);
+        observer.complete();
+      }, 5000);
 ```
+
 2. Any statement or code after observer.error()` & `observer.complete()` will not execute.
 ```ts
 const myObservable = Observable.create((observer: Observer<string>) => {
-    setTimeout(() => {
+      setTimeout(() => {
         observer.next('The First Package.');
-    }, 2000);
+      }, 2000);
 
-    setTimeout(() => {
+      setTimeout(() => {
         observer.error('This doesn\'t work.');
         // or
         observer.complete();
-    }, 5000);
+      }, 5000);
     // further code will not get executed.
-    setTimeout(() => {
-        observer.next('The Third package.');
-    }, 6000);
-});
+      setTimeout(() => {
+        observer.next('The Third package.'); 
+      }, 6000);
+    });
 ```
 ### 5.4 Unsubscribe
 - Without Unsubscribe when you navigate away from that component, the subscription of observable not get destroy.
 - which keep running continously and will cause memory leak
+
 ```ts
-import { OnInit, OnDestroy } from  '@angular/core';
-import { Observable } from  'rxjs/Observable';
-import  'rxjs/Rx';
-import { Observer } from  'rxjs/Observer';
-import { Subscription } from  'rxjs/Subscription';
+import { OnInit, OnDestroy } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/Rx';
+import { Observer } from 'rxjs/Observer';
+import { Subscription } from 'rxjs/Subscription';
 
-export  class HomeComponent implements OnInit, OnDestroy {
-    numberObsSubscription: Subscription;
-    customObsSubscription: Subscription;
-    
-    ngOnInit() {
-        const myNumber = Observable.interval(1000);
-        // Assign subscription here
-        this.numberObsSubscription = myNumber.subscribe(
-            (num: number) => {
-                console.log(num);
-            }
-        );
+export class HomeComponent implements OnInit, OnDestroy {
+  numberObsSubscription: Subscription;
+  customObsSubscription: Subscription;
 
-        this.customObsSubscription = myObservable.subscribe(
-            (data: string) => { console.log(data); },
-            (error: string) => { console.log(error); },
-            () => { console.log('This complete.'); }
-        );
-    }
+  ngOnInit() {
+    const myNumber = Observable.interval(1000);
+    // Assign subscription here
+    this.numberObsSubscription = myNumber.subscribe(
+      (num: number) => {
+        console.log(num);
+      }
+    );
 
-    ngOnDestroy() {
-        this.numberObsSubscription.unsubscribe();
-        this.customObsSubscription.unsubscribe();
-    }
+    this.customObsSubscription = myObservable.subscribe(
+      (data: string) => { console.log(data); },
+      (error: string) => { console.log(error); },
+      () => { console.log('This complete.'); }
+    );
+  }
+
+  ngOnDestroy() {
+    this.numberObsSubscription.unsubscribe();
+    this.customObsSubscription.unsubscribe();
+  }
 }
 ```
 
@@ -748,13 +772,14 @@ export  class HomeComponent implements OnInit, OnDestroy {
 - Operators can be used on any observable.
 To use Operators import `rxjs\Rx`
 ```ts
-import  'rxjs/Rx';
+import 'rxjs/Rx';
+
 const myNumber = Observable.interval(1000)
     // map is operator
-    .map((data: number) => {
-    // each operator always return something
-    return data * 100;
-});
+      .map((data: number) => {
+        // each operator always return something
+        return data * 100;
+      });
 ```
 - Operators simple return new observable which you can of course also chain these operator
 e.g.
@@ -763,65 +788,61 @@ Observable.interval().map().map().map();
 // so on
 ```
 ## 5.6 Avoid rxjs-compat package
+
 ```sh
 npm uninstall rxjs-compat
 ```
+
 - Now instead of import from 'rxjs\Observable' or 'rxjs\Subject' or 'rxjs\Observer' etc just do
 ```ts
-import {Observable, Observer, Subscription, Subject, interval} from  'rxjs';
+import {Observable, Observer, Subscription, Subject, interval} from 'rxjs';
 ```
--  `Observable.interval();` will be just `interval();`
+- `Observable.interval();` will be just `interval();`
+
 #### For Operators
-- Remove `import 'rxjs\Rx';` instead do
+- Remove  `import 'rxjs\Rx';` instead do
 ```ts
-import { map } from  'rxjs/Operators';
+import { map } from 'rxjs/Operators';
+
 // Define the Observable
-const myNumber = interval(1000).pipe(map(
-    (data: number) => {
-    return data * 100;
-    }
-));
+    const myNumber = interval(1000)
+      .pipe(map(
+        (data: number) => {
+          return data * 100;
+        }
+      ));
 ```
 
 # 6. Subject
 - http://reactivex.io/documentation/subject.html
 - It allows you to Push/emit new data during your code.
-- It is similar to the eventEmitter.
-- A great option for cross-component communication instead of eventEmitter.
-- It acts as Observable and Observer at the same time.
+- It similar to eventEmitter.
+- Great option for cross-component communication instead of eventEmitter.
+- It act as Observable and Observer at same time.
 - You can utilize function like observer too like
-    - `next()`
-    - `error()`
-    - `complete()` etc.
+    - next()
+    - error()
+    - complete() etc.
 - Don't forget to unsubscribe the subject.
+
+
 #### Define Subject
 ```ts
-import { Subject } from  "rxjs\Subject";
-export  class UsersService {
+import { Subject } from "rxjs\Subject";
+
+export class UsersService {
     userActivated = new Subject();
 }
 ```
+
 #### Use as Observable
 ```ts
 // Push data like Observable
 this.userActivated.next(this.is);
 ```
 #### Use as Observer
-```ts
 this.userActivated.subscribe(
     () => {
         // Your code goes here.
     }
 );
-```
-# 5. NgModule MetaData
-1. imports: when you import the modules, you are specifying here saying that the app module will make use of this module. 
-2. declarations: it declares the view classes that belong to this particular module. So the view classes in case of an Angular module would be in the form of either components, directives, and pipes.
-3. providers: it specify all the services that this particular module will make use of
-4. bootstrap:
-5. exports: exporting something that can be used by another module.
-
-# Questions?
-1. why not use Bootstrap for doing the design of the templates for our Angular application?
-> Indeed, you can also use Bootstrap to design the templates for our Angular application. But you can only use the CSS components part of Bootstrap within your Angular application. The jQuery based components. The JavaScript components can not be explicitly used there might be some conflicts between the jQuery based components from Bootstrap and the Angular code itself.
-2. what is bootstrapping of angular modules in angular means?
